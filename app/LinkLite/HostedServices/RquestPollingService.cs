@@ -44,9 +44,9 @@ namespace LinkLite.HostedServices
                 "Polling RQUEST for Queries on Collection: {_collectionId}",
                 _config.RquestCollectionId);
 
-            var query = await _rquestApi.FetchQuery(_config.RquestCollectionId);
+            var task = await _rquestApi.FetchQuery(_config.RquestCollectionId);
 
-            if (query?.Task is null)
+            if (task is null)
             {
                 _logger.LogInformation(
                       "No Queries on Collection: {_collectionId}",
