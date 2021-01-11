@@ -61,6 +61,8 @@ namespace LinkLite.HostedServices
             // TODO: pause polling while processing (allow up to max parallellism)?
             StopTimer();
 
+            _logger.LogInformation("Pretend I'm processing a query");
+
             // TODO: Process query - Query OMOP
             // await Process()
 
