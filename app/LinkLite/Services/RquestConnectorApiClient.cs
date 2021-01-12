@@ -58,8 +58,8 @@ namespace LinkLite.Services
                 if (result.StatusCode == HttpStatusCode.NoContent)
                 {
                     _logger.LogInformation(
-                            "No Query Tasks waiting for {collectionId}",
-                            collectionId);
+                        "No Query Tasks waiting for {collectionId}",
+                        collectionId);
                     return null;
                 }
 
@@ -77,23 +77,9 @@ namespace LinkLite.Services
                 {
                     _logger.LogError(e, "Invalid Response Format from Fetch Query Endpoint");
 
-                    /////////////////////////////
-                    // HACK: temporary handler for misimplemented No Content response
-                    // remove when implementation matches docs
+                    // TODO: might make this conditional?
                     var body = await result.Content.ReadAsStringAsync();
                     _logger.LogDebug("Invalid Response Body: {body}", body);
-
-                    var bodyWords = body.Split(
-                        new[] { "\r\n", "\n", ":", " " },
-                        StringSplitOptions.RemoveEmptyEntries);
-
-                    // HACK: this may change (again!) before we reach the documented version
-                    var expected = new[] { "Status", "204", "No", "Content" };
-
-                    if (bodyWords.SequenceEqual(expected)) return null;
-
-                    // HACK: END OF RIDICULOUS WORKAROUND
-                    ////////////////////////////////
 
                     throw;
                 }
