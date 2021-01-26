@@ -6,18 +6,25 @@
     public class RquestConnectorApiOptions
     {
         /// <summary>
-        /// The Base Url of the API
+        /// The Base Url of the Connector API, not just RQUEST.
+        /// 
+        /// Expected to be something like `[rquest-domain]/task/capi/`
         /// </summary>
         public string BaseUrl { get; set; } = string.Empty;
 
         /// <summary>
+        /// Queue Status Endpoint
+        /// </summary>
+        public string QueueStatusEndpoint { get; set; } = "queue";
+
+        /// <summary>
         /// Fetch Query Endpoint
         /// </summary>
-        public string FetchQueryEndpoint { get; set; } = "fetch_query";
+        public string FetchQueryEndpoint { get; set; } = "query";
 
         /// <summary>
         /// Submit Result Endpoint
         /// </summary>
-        public string SubmitResultEndpoint { get; set; } = "submit_result";
+        public string SubmitResultEndpoint { get; set; } = "result";
     }
 }

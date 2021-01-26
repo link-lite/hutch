@@ -9,9 +9,10 @@
 "QueryPollingInterval": 5, // seconds
 "RquestCollectionId": "",
 "RquestConnectorApi": {
-    "BaseUrl": "",
-    "FetchQueryEndpoint": "fetch_query",
-    "SubmitResultEndpoint": "submit_result",
+    "BaseUrl": "", // for the Connector API specifically, not just general RQUEST URL, e.g. `https://rquestserver.com/task/capi/`,
+    "QueueStatusEndpoint": "queue",
+    "FetchQueryEndpoint": "query",
+    "SubmitResultEndpoint": "result",
 },
 ```
 

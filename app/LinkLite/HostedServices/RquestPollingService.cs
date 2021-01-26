@@ -1,6 +1,5 @@
 ﻿using LinkLite.OptionsModels;
 using LinkLite.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -31,11 +30,8 @@ namespace LinkLite.HostedServices
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("RQUEST Polling Service started.");
-            _timer = new Timer(
-                PollRquest,
-                null,
-                TimeSpan.Zero,
-                TimeSpan.FromSeconds(_config.QueryPollingInterval));
+            _timer = new Timer(PollRquest);
+            StartTimer();
             return Task.CompletedTask;
         }
 
@@ -48,9 +44,9 @@ namespace LinkLite.HostedServices
                 "Polling RQUEST for Queries on Collection: {_collectionId}",
                 _config.RquestCollectionId);
 
-            var query = await _rquestApi.FetchQuery(_config.RquestCollectionId);
+            var task = await _rquestApi.FetchQuery(_config.RquestCollectionId);
 
-            if (query?.Task is null)
+            if (task is null)
             {
                 _logger.LogInformation(
                       "No Queries on Collection: {_collectionId}",
@@ -59,16 +55,27 @@ namespace LinkLite.HostedServices
             }
 
             // TODO: Threading / Parallel query handling?
+            // affects timer stoppage, the process logic will need to be
+            // threaded using Task.Run or similar.
+
             // TODO: pause polling while processing (allow up to max parallellism)?
+            StopTimer();
+
+            _logger.LogInformation("Pretend I'm processing a query");
 
             // TODO: Process query - Query OMOP
+            // await Process()
+
             // TODO: submit results via Rquest API
+            // await _rquestApi.SubmitResults();
+
+            StartTimer();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("RQUEST Polling Service stopping.");
-            _timer?.Change(Timeout.Infinite, 0);
+            StopTimer();
             return Task.CompletedTask;
         }
 
@@ -76,5 +83,20 @@ namespace LinkLite.HostedServices
         {
             _timer?.Dispose();
         }
+
+        /// <summary>
+        /// Change the timer to execute its callback regularly
+        /// at the configured polling interval
+        /// </summary>
+        private void StartTimer()
+            => _timer?.Change(
+                TimeSpan.Zero,
+                TimeSpan.FromSeconds(_config.QueryPollingInterval));
+
+        /// <summary>
+        /// Change the timer to stop regular callback execution
+        /// </summary>
+        private void StopTimer()
+            => _timer?.Change(Timeout.Infinite, 0);
     }
 }
