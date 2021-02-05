@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkLite", "LinkLite\LinkLite.csproj", "{2F427A3F-9411-4E7B-B965-23C327BD8015}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinkLite", "LinkLite\LinkLite.csproj", "{2F427A3F-9411-4E7B-B965-23C327BD8015}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkLite.Test", "LinkLite.Test\LinkLite.Test.csproj", "{147F5AD9-3A3B-4922-A9F6-C26F823BF3C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{2F427A3F-9411-4E7B-B965-23C327BD8015}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F427A3F-9411-4E7B-B965-23C327BD8015}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F427A3F-9411-4E7B-B965-23C327BD8015}.Release|Any CPU.Build.0 = Release|Any CPU
+		{147F5AD9-3A3B-4922-A9F6-C26F823BF3C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{147F5AD9-3A3B-4922-A9F6-C26F823BF3C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{147F5AD9-3A3B-4922-A9F6-C26F823BF3C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{147F5AD9-3A3B-4922-A9F6-C26F823BF3C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

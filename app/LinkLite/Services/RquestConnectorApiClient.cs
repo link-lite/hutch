@@ -1,10 +1,12 @@
-﻿using Flurl;
+using Flurl;
+
 using LinkLite.Dto;
 using LinkLite.OptionsModels;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;

@@ -8,6 +8,9 @@ jobs:
 
     runs-on: ubuntu-latest
     
+    env:
+      buildConfig: Release
+
     defaults:
       run:
         working-directory: app
@@ -21,6 +24,20 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore
+      run: >-
+        dotnet build
+        --no-restore
+        -c ${{ env.buildConfig }}
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: >-
+        dotnet test
+        --no-build
+        -c ${{ env.buildConfig }}
+        --logger "trx;LogFileName=test-results.trx"
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Test Results
+        path: app/LinkLite.Test/TestResults/test-results.trx
+        reporter: dotnet-trx
