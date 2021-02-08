@@ -9,7 +9,7 @@ namespace LinkLite.Helpers
     /// <typeparam name="T">Type of node values</typeparam>
     public class TreeNode<T>
     {
-        public T Value { get; set; }
+        public T? Value { get; set; }
         public List<TreeNode<T>> Children { get; } = new();
         public TreeNode<T> Add(TreeNode<T> child)
         {

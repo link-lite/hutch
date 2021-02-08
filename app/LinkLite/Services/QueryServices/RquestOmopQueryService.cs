@@ -74,8 +74,8 @@ namespace LinkLite.Services.QueryServices
                 {
                     groupResults.Value = Combine(
                             group.Combinator,
-                            groupResults.Children!
-                                .ConvertAll(ruleResults => ruleResults.Value))
+                            groupResults.Children
+                                .ConvertAll(ruleResults => ruleResults.Value!))
                         .ToList();
                 }
                 else
@@ -91,8 +91,8 @@ namespace LinkLite.Services.QueryServices
             {
                 results.Value = Combine(
                             query.Combinator,
-                            results.Children!
-                                .ConvertAll(groupResults => groupResults.Value))
+                            results.Children
+                                .ConvertAll(groupResults => groupResults.Value!))
                         .ToList();
             }
             else

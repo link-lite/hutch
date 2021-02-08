@@ -11,11 +11,11 @@ namespace LinkLite.Data
         {
         }
 
-        public DbSet<Person> Person { get; set; }
+        public DbSet<Person> Person => Set<Person>();
 
-        public DbSet<ConditionOccurrence> ConditionOccurrence { get; set; }
-        public DbSet<Measurement> Measurement { get; set; }
-        public DbSet<Observation> Observation { get; set; }
+        public DbSet<ConditionOccurrence> ConditionOccurrence => Set<ConditionOccurrence>();
+        public DbSet<Measurement> Measurement => Set<Measurement>();
+        public DbSet<Observation> Observation => Set<Observation>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,4 +1,5 @@
 using LinkLite.Data;
+using LinkLite.Dto;
 using LinkLite.OptionsModels;
 using LinkLite.Services;
 using LinkLite.Services.QueryServices;
@@ -39,7 +40,7 @@ namespace LinkLite.HostedServices
         {
             _logger.LogInformation("RQUEST Polling Service started.");
             _timer = new Timer(PollRquest);
-            StartTimer();
+            RunTimerOnce();
             return Task.CompletedTask;
         }
 
@@ -53,41 +54,66 @@ namespace LinkLite.HostedServices
                 "Polling RQUEST for Queries on Collection: {_collectionId}",
                 _config.RquestCollectionId);
 
+
+            RquestQueryTask? task = null;
+            int? result = null;
+
             try
             {
-                var task = await _rquestApi.FetchQuery(_config.RquestCollectionId);
+                task = await _rquestApi.FetchQuery(_config.RquestCollectionId);
 
                 if (task is null)
                 {
                     _logger.LogInformation(
                           "No Queries on Collection: {_collectionId}",
                           _config.RquestCollectionId);
+                    RunTimerOnce();
                     return;
                 }
 
                 // TODO: Threading / Parallel query handling?
-                // affects timer stoppage, the process logic will need to be
+                // affects timer usage, the process logic will need to be
                 // threaded using Task.Run or similar.
-                StopTimer();
+                //StopTimer();
 
                 _logger.LogInformation("Processing Query: {taskId}", task.TaskId);
 
-                var result = await _queries.Process(task.Query);
-                
+                result = await _queries.Process(task.Query);
+
                 _logger.LogInformation(
                     "Query Result: {taskId}: {result}", task.TaskId, result);
 
-                // TODO: submit results via Rquest API
-                // await _rquestApi.SubmitResults();
-
-                StartTimer();
+                await _rquestApi.SubmitQueryResult(task.TaskId, result.Value);
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error fetching RQUEST query");
-                return;
+                if (task is null)
+                {
+                    _logger.LogError(e, "Task fetching failed");
+                }
+                else
+                {
+
+                    if (result is null)
+                    {
+                        _logger.LogError(e,
+                            "Query execution failed for task: {taskId}",
+                            task.TaskId);
+                    }
+                    else
+                    {
+                        _logger.LogError(e,
+                            "Results Submission failed for task: {taskId}, result: {result}",
+                            task.TaskId,
+                            result);
+                    }
+
+                    await _rquestApi.CancelQueryTask(task.TaskId);
+                    _logger.LogInformation("Cancelled failed task: {taskId}", task.TaskId);
+                }
             }
 
+            RunTimerOnce();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
@@ -101,6 +127,15 @@ namespace LinkLite.HostedServices
         {
             _timer?.Dispose();
         }
+
+        /// <summary>
+        /// Run the timer one time, to execute its callback when it expires
+        /// (after the configured polling interval time)
+        /// </summary>
+        private void RunTimerOnce()
+            => _timer?.Change(
+                TimeSpan.FromSeconds(_config.QueryPollingInterval),
+                Timeout.InfiniteTimeSpan);
 
         /// <summary>
         /// Change the timer to execute its callback regularly

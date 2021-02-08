@@ -4,7 +4,7 @@
 
 # Configuration
 
-```json
+```jsonc
 "ConnectionStrings": {
   // Default is the details for the local development db in docker
   "Omop": "Server=localhost;Username=postgres;Password=example;Database=omop"

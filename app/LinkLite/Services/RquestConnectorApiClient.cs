@@ -9,6 +9,8 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -33,15 +35,14 @@ namespace LinkLite.Services
         }
 
         /// <summary>
-        /// Turn the Collection Id into a payload
-        /// suitable for several Connector API endpoints
+        /// Serialize a value to a JSON string, and provide HTTP StringContent
+        /// for it with a media type of "application/json"
         /// </summary>
-        /// <param name="collectionId">RQUEST Collection Id (Biobank Id)</param>
-        /// <returns></returns>
-        private StringContent CollectionIdPayload(string collectionId)
+        /// <param name="value"></param>
+        /// <returns>HTTP StringContent with the value serialized to JSON and a media type of "application/json"</returns>
+        private StringContent AsHttpJsonString<T>(T value)
             => new StringContent(
-                    JsonSerializer.Serialize(
-                        new { collection_id = collectionId }),
+                    JsonSerializer.Serialize(value),
                     System.Text.Encoding.UTF8,
                     "application/json");
 
@@ -49,11 +50,12 @@ namespace LinkLite.Services
         /// Try and get a job for a biobank
         /// </summary>
         /// <param name="collectionId">RQUEST Collection Id (Biobank Id)</param>
-        /// <returns></returns>
+        /// <returns>A Task DTO containing a Query to run, or null if none are waiting</returns>
         public async Task<RquestQueryTask?> FetchQuery(string collectionId)
         {
             var result = await _client.PostAsync(
-                _apiOptions.FetchQueryEndpoint, CollectionIdPayload(collectionId));
+                _apiOptions.FetchQueryEndpoint,
+                AsHttpJsonString(new { collection_id = collectionId }));
 
             if (result.IsSuccessStatusCode)
             {
@@ -67,8 +69,7 @@ namespace LinkLite.Services
 
                 try
                 {
-                    var task = await JsonSerializer.DeserializeAsync<RquestQueryTask>(
-                        await result.Content.ReadAsStreamAsync());
+                    var task = await result.Content.ReadFromJsonAsync<RquestQueryTask>();
 
                     // TODO: a null task is impossible because the necessary JSON payload
                     // to achieve it would fail deserialization?
@@ -93,5 +94,27 @@ namespace LinkLite.Services
                 throw new ApplicationException(message);
             }
         }
+
+        /// <summary>
+        /// Submit the result of a query
+        /// </summary>
+        /// <param name="taskId">ID of the query task</param>
+        /// <param name="count">The result</param>
+        public async Task SubmitQueryResult(string taskId, int count)
+            // TODO handle errors (in the 200 OK with status "error")?
+            => (await _client.PostAsync(
+                    _apiOptions.SubmitResultEndpoint,
+                    AsHttpJsonString(new RquestQueryTaskResult(taskId, count))))
+                .EnsureSuccessStatusCode();
+
+        /// <summary>
+        /// Cancel a query task
+        /// </summary>
+        /// <param name="taskId">ID of the query task</param>
+        public async Task CancelQueryTask(string taskId)
+            => (await _client.PostAsync(
+                    _apiOptions.SubmitResultEndpoint,
+                    AsHttpJsonString(new RquestQueryTaskResult(taskId))))
+                .EnsureSuccessStatusCode();
     }
 }
