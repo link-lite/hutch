@@ -15,8 +15,8 @@ namespace LinkLite.Data.Entities
         [Column("race_concept_id")]
         public int RaceConceptId { get; set; }
 
-        public virtual List<ConditionOccurrence> ConditionOccurrences { get; set; } = new();
-        public virtual List<Measurement> Measurements { get; set; } = new();
-        public virtual List<Observation> Observations { get; set; } = new();
+        public List<ConditionOccurrence> ConditionOccurrences { get; set; } = new();
+        public List<Measurement> Measurements { get; set; } = new();
+        public List<Observation> Observations { get; set; } = new();
     }
 }

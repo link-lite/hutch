@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace LinkLite.Data.Entities
 {
     [Table("observation")]
-    public class Observation
+    public class Observation : IConcept, INumberValue
     {
         [Column("observation_id")]
         public int Id { get; set; }
@@ -12,8 +12,11 @@ namespace LinkLite.Data.Entities
         public int PersonId { get; set; }
 
         [Column("observation_concept_id")]
-        public int ObservationConceptId { get; set; }
+        public int ConceptId { get; set; }
 
-        public virtual Person Person { get; set; } = new();
+        [Column("value_as_number")]
+        public double? ValueAsNumber { get; set; }
+
+        public Person Person { get; set; } = new();
     }
 }

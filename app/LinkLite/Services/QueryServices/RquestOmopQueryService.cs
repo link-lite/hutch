@@ -5,8 +5,11 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinkLite.Data;
+using LinkLite.Data.Entities;
 using LinkLite.Dto;
 using LinkLite.Helpers;
+
+using LinqKit;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -49,6 +52,7 @@ namespace LinkLite.Services.QueryServices
                         var result = rule.Type switch
                         {
                             RuleTypes.Boolean => await BooleanHandler(rule),
+                            RuleTypes.Numeric => await NumericHandler(rule),
                             _ => throw new ArgumentException($"Unknown Rule Type: {rule.Type}")
                         };
                         groupResults.Add(new() { Value = result });
@@ -158,28 +162,61 @@ namespace LinkLite.Services.QueryServices
 
             var conceptId = Helpers.ParseVariableName(rule.VariableName);
 
-            var person = _db.Person.AsNoTracking()
-                .Include(p => p.ConditionOccurrences)
-                .Include(p => p.Measurements)
-                .Include(p => p.Observations);
+            // Inclusion criteria
+            var match = PredicateBuilder
+                .New<Person>(p => p.GenderConceptId == conceptId)
+                .Or(p => p.RaceConceptId == conceptId)
+                .Or(p => p.Measurements.Any(x => x.ConceptId == conceptId))
+                .Or(p => p.Observations.Any(x => x.ConceptId == conceptId))
+                .Or(p => p.ConditionOccurrences.Any(x => x.ConceptId == conceptId));
 
-            // differ the query inclusion criteria
-            // based on value.
-            // doing it this way allows EF to produce
-            // nice SQL either way round?
+            // Build the query
+            var person = _db.Person.AsNoTracking();
             var query = value
-                ? person.Where(p =>
-                    p.ConditionOccurrences.Select(co => co.ConditionConceptId).Contains(conceptId) ||
-                    p.Measurements.Select(co => co.MeasurementConceptId).Contains(conceptId) ||
-                    p.Observations.Select(co => co.ObservationConceptId).Contains(conceptId) ||
-                    p.GenderConceptId == conceptId ||
-                    p.RaceConceptId == conceptId)
-                : person.Where(p =>
-                    !p.ConditionOccurrences.Select(co => co.ConditionConceptId).Contains(conceptId) ||
-                    !p.Measurements.Select(co => co.MeasurementConceptId).Contains(conceptId) ||
-                    !p.Observations.Select(co => co.ObservationConceptId).Contains(conceptId) ||
-                    p.GenderConceptId != conceptId ||
-                    p.RaceConceptId != conceptId);
+                ? person.Where(match)
+                : person.Where(match.Not());
+
+            // Run the query
+            return await query
+                .Select(p => p.Id)
+                .ToListAsync();
+        }
+
+        private Expression<Func<T, bool>> NumericMatch<T>(int conceptId, double? min, double? max)
+            where T : IConcept, INumberValue
+        {
+            var p = PredicateBuilder
+                .New<T>(x => x.ConceptId == conceptId);
+
+            // no range is valid, and ultimately works the same as BOOLEAN
+            if (min is null && max is null) return p;
+
+            if (min is null) p = p.And(x => x.ValueAsNumber < max);
+            else if (max is null) p = p.And(x => x.ValueAsNumber > min);
+            else p = p.And(x => x.ValueAsNumber >= min && x.ValueAsNumber <= max);
+
+            return p;
+        }
+
+        public async Task<List<int>> NumericHandler(RquestQueryRule rule)
+        {
+            var conceptId = Helpers.ParseVariableName(rule.VariableName);
+            var (min, max) = Helpers.ParseNumericRange(rule.Value);
+
+            // Inclusion criteria
+            var match = PredicateBuilder
+                .New<Person>(p => p.Measurements.AsQueryable()
+                    .Any(NumericMatch<Measurement>(conceptId, min, max)))
+                .Or(p => p.Observations.AsQueryable()
+                    .Any(NumericMatch<Observation>(conceptId, min, max)));
+
+            // Build the query
+            var person = _db.Person.AsNoTracking();
+            var query = rule.Operand switch
+            {
+                RuleOperands.Exclude => person.Where(match.Not()),
+                _ => person.Where(match) // For now we default empty or invalid operand to "include"
+            };
 
             // Run the query
             return await query
