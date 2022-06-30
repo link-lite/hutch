@@ -22,7 +22,6 @@ def main():
     )
 
     # set up the backup logger
-    # TODO: remove backup logger in future PR
     backup_handler = logging.StreamHandler(sys.stdout)
     backup_handler.setFormatter(format)
     backup_logger = logging.getLogger(hutch_config.BACKUP_LOGGER_NAME)
