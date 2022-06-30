@@ -4,41 +4,25 @@ import pytest
 import logging
 
 from sqlalchemy import create_engine, select
-from sqlalchemy.engine import URL
 
 from hutchagent.db_logging import Log, SyncLogDBHandler
 from hutchagent.db_manager import SyncDBManager
+
+CONNECTION_STRING_BASE = os.getenv("CONNECTION_STRING_BASE")
+DB_NAME = os.getenv("DB_NAME")
 
 
 @pytest.fixture
 def spoof_db():
     ### SETUP
     # create the test database
-    default_engine = create_engine(
-        URL.create(
-            drivername=os.getenv("DB_DRIVER"),
-            username=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT"),
-            database=os.getenv("DB_DEFAULT"),
-        )
-    )
+    default_engine = create_engine(CONNECTION_STRING_BASE)
     with default_engine.connect() as conn:
         conn.execute("commit")  # a transaction is started by default - end it.
-        conn.execute(f"create database {os.getenv('DB_NAME')}")
+        conn.execute(f"create database {DB_NAME}")
 
     # provide an engine to interact with the test database
-    test_engine = create_engine(
-        URL.create(
-            drivername=os.getenv("DB_DRIVER"),
-            username=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT"),
-            database=os.getenv("DB_NAME"),
-        )
-    )
+    test_engine = create_engine(CONNECTION_STRING_BASE + f"/{DB_NAME}")
     yield test_engine  # gives way to the test
 
     ### TEARDOWN
@@ -47,7 +31,7 @@ def spoof_db():
     # drop the test database.
     with default_engine.connect() as conn:
         conn.execute("commit")  # a transaction is started by default - end it.
-        conn.execute(f"drop database {os.getenv('DB_NAME')}")
+        conn.execute(f"drop database {DB_NAME}")
 
 
 def test_sync_db_logger(spoof_db):
@@ -67,14 +51,7 @@ def test_sync_db_logger(spoof_db):
     backup_logger.addHandler(backup_handler)
 
     # set up the db logger
-    db_manager = SyncDBManager(
-        drivername=os.getenv("DB_DRIVER"),
-        username=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT"),
-        database=os.getenv("DB_NAME"),
-    )
+    db_manager = SyncDBManager(connection_string=CONNECTION_STRING_BASE + f"/{DB_NAME}")
     db_handler = SyncLogDBHandler(db_manager, "backup_logger")
     db_handler.setFormatter(format)
     db_logger = logging.getLogger("db_logger")
