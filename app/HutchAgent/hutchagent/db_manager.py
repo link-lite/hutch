@@ -2,30 +2,16 @@ import asyncio
 from typing import Any
 
 from sqlalchemy import create_engine, inspect
-from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 
 
 class BaseDBManager:
-    def __init__(
-        self,
-        username: str,
-        password: str,
-        host: str,
-        port: int,
-        database: str,
-        drivername: str,
-    ) -> None:
+    def __init__(self, connection_string: str) -> None:
         """Constructor method for DBManager classes.
         Creates the connection engine and the inpector for the database.
 
         Args:
-            username (str): The username for the database.
-            password (str): The password for the database.
-            host (str): The host for the database.
-            port (int): The port number for the database.
-            database (str): The name of the database.
-            drivername (str): The database driver e.g. "psycopg2", "pymysql", etc.
+            connection_string (str): The connection string for the target database.
 
         Raises:
             NotImplementedError: Raised when this method has not been implemented in subclass.
@@ -70,24 +56,8 @@ class BaseDBManager:
 
 
 class SyncDBManager(BaseDBManager):
-    def __init__(
-        self,
-        username: str,
-        password: str,
-        host: str,
-        port: int,
-        database: str,
-        drivername: str,
-    ) -> None:
-        url = URL.create(
-            drivername=drivername,
-            username=username,
-            password=password,
-            host=host,
-            port=port,
-            database=database,
-        )
-        self.engine = create_engine(url=url)
+    def __init__(self, connection_string: str) -> None:
+        self.engine = create_engine(connection_string)
         self.inspector = inspect(self.engine)
 
     def execute_and_fetch(self, stmnt: Any) -> list:
@@ -109,24 +79,8 @@ class SyncDBManager(BaseDBManager):
 
 
 class AsyncDBManager(BaseDBManager):
-    def __init__(
-        self,
-        username: str,
-        password: str,
-        host: str,
-        port: int,
-        database: str,
-        drivername: str,
-    ) -> None:
-        url = URL(
-            drivername=drivername,
-            username=username,
-            password=password,
-            host=host,
-            port=port,
-            database=database,
-        )
-        self.engine = create_async_engine(url=url)
+    def __init__(self, connection_string: str) -> None:
+        self.engine = create_async_engine(connection_string)
         self.inspector = inspect(self.engine)
 
     async def execute_and_fetch(self, stmnt: Any) -> list:
