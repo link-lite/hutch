@@ -35,7 +35,9 @@ public class ActivitySourceController : ControllerBase
     {
       await _activitySources.Delete(id);
     }
-    catch (KeyNotFoundException) { }
+    catch (KeyNotFoundException) {
+      
+    }
     return NoContent();
   }
 

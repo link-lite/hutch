@@ -56,7 +56,7 @@ class CheckIn(threading.Thread):
             if self.next_time > now > self.current_time:
                 requests.post(
                     f"{MANAGER_URL}/api/agents/checkin",
-                    json={"dataSources": "<name>"},
+                    json={"dataSources": ["<name>"]},
                 )
                 self.current_time, self.next_time = self.next_time, self.cron.get_next(
                     dt.datetime
