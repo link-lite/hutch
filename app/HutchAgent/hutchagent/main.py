@@ -22,14 +22,21 @@ def main():
     )
 
     # set up the backup logger
+    # TODO: remove backup logger in future PR
     backup_handler = logging.StreamHandler(sys.stdout)
     backup_handler.setFormatter(format)
     backup_logger = logging.getLogger(hutch_config.BACKUP_LOGGER_NAME)
     backup_logger.setLevel(logging.INFO)
     backup_logger.addHandler(backup_handler)
 
+    try:
+        log_db_connection_str = hutch_config.get_log_db_conn()
+    except Exception as e:
+        backup_logger.critical(str(e))
+        exit()
+
     # set up the db logger
-    db_manager = SyncDBManager(**hutch_config.LOGS_AND_CONFIG_DB)
+    db_manager = SyncDBManager(log_db_connection_str)
     db_handler = SyncLogDBHandler(db_manager, hutch_config.BACKUP_LOGGER_NAME)
     db_handler.setFormatter(format)
     db_logger = logging.getLogger(hutch_config.DB_LOGGER_NAME)
