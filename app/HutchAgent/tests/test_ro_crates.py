@@ -76,8 +76,8 @@ def test_rule():
 
 def test_group():
     group = Group.from_dict(GROUP_DICT)
-    assert len(group.item_list_element) == GROUP_DICT["numberOfItems"]
-    for element in group.item_list_element:
+    assert len(group.rules) == GROUP_DICT["numberOfItems"]
+    for element in group.rules:
         assert isinstance(element, Rule)
     assert isinstance(group.rule_operator, Operator)
     assert group.to_dict() == GROUP_DICT

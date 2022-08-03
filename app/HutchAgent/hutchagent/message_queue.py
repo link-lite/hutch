@@ -12,7 +12,7 @@ import hutchagent.config as config
 from hutchagent.ro_crates.result import Result
 from hutchagent.ro_crates.query import Query
 from hutchagent.db_manager import SyncDBManager
-from hutchagent.query import RQuestQuery
+from hutchagent.query import RQuestQuery, RQuestQueryBuilder, ROCratesQueryBuilder
 
 
 def connect(queue: str, host="localhost", **kwargs) -> BlockingChannel:
@@ -81,9 +81,11 @@ def rquest_callback(
         drivername=os.getenv("DATASOURCE_DB_DRIVERNAME", config.DEFAULT_DB_DRIVER),
         schema=os.getenv("DATASOURCE_DB_SCHEMA"),
     )
+    query_builder = RQuestQueryBuilder(db_manager, query)
+    query_builder.build_subqueries()
     try:
         query_start = time.time()
-        res = db_manager.execute_and_fetch(query.to_sql())
+        res = db_manager.execute_and_fetch(query_builder.build_sql())
         query_end = time.time()
         count_ = res[0][0]
         response_data["queryResult"].update(count=count_)
@@ -151,9 +153,11 @@ def ro_crates_callback(
         drivername=os.getenv("DATASOURCE_DB_DRIVERNAME", config.DEFAULT_DB_DRIVER),
         schema=os.getenv("DATASOURCE_DB_SCHEMA"),
     )
+    query_builder = ROCratesQueryBuilder(db_manager, query)
+    query_builder.build_subqueries()
     try:
         query_start = time.time()
-        res = db_manager.execute_and_fetch(query.to_sql())
+        res = db_manager.execute_and_fetch(query_builder.build_sql())
         query_end = time.time()
         count_ = res[0][0]
         logger.info(

@@ -1,5 +1,6 @@
 import pytest
 import hutchagent.query as query
+import hutchagent.entities as entities
 
 
 def test_create_rquest_query():
@@ -48,11 +49,13 @@ def test_text_rule_sql_clause():
     }
     rule_obj = query.RQuestQueryRule(**eq_rule)
     assert rule_obj.concept_id == "8527"
-    assert str(rule_obj.sql_clause) == "race_concept_id = :race_concept_id_1"
+    rule_obj.set_column(entities.Person.race_concept_id)
+    assert str(rule_obj.sql_clause) == "person.race_concept_id = :race_concept_id_1"
     ne_rule = eq_rule.copy()
     ne_rule.update(oper="!=")
     rule_obj = query.RQuestQueryRule(**ne_rule)
-    assert str(rule_obj.sql_clause) == "race_concept_id != :race_concept_id_1"
+    rule_obj.set_column(entities.Person.race_concept_id)
+    assert str(rule_obj.sql_clause) == "person.race_concept_id != :race_concept_id_1"
 
 
 def test_numeric_rule_sql_clause():
@@ -63,21 +66,22 @@ def test_numeric_rule_sql_clause():
         "value": "10..20",
     }
     rule_obj = query.RQuestQueryRule(**eq_rule)
+    rule_obj.set_column(entities.Person.race_concept_id)
     assert rule_obj.concept_id == "8527"
     assert (
         str(rule_obj.sql_clause)
-        == "race_concept_id BETWEEN :race_concept_id_1 AND :race_concept_id_2"
+        == "person.race_concept_id BETWEEN :race_concept_id_1 AND :race_concept_id_2"
     )
     ne_rule = eq_rule.copy()
     ne_rule.update(oper="!=")
     rule_obj = query.RQuestQueryRule(**ne_rule)
+    rule_obj.set_column(entities.Person.race_concept_id)
     assert (
         str(rule_obj.sql_clause)
-        == "race_concept_id NOT BETWEEN :race_concept_id_1 AND :race_concept_id_2"
+        == "person.race_concept_id NOT BETWEEN :race_concept_id_1 AND :race_concept_id_2"
     )
 
 
-# @pytest.mark.skip
 def test_time_rule_sql_clause():
     eq_rule = {
         "varname": "OMOP",
@@ -87,26 +91,34 @@ def test_time_rule_sql_clause():
         "time": "18|:AGE:Y",
     }
     rule_obj = query.RQuestQueryRule(**eq_rule)
+    rule_obj.set_table(entities.Person)
+    rule_obj.set_column(entities.Person.race_concept_id)
     assert rule_obj.concept_id == "8527"
     assert (
         str(rule_obj.sql_clause)
-        == "race_concept_id = :race_concept_id_1 AND birth_datetime > :birth_datetime_1"
+        == "person.race_concept_id = :race_concept_id_1 AND person.birth_datetime > :birth_datetime_1"
     )
     ne_rule = eq_rule.copy()
     ne_rule.update(oper="!=")
     rule_obj = query.RQuestQueryRule(**ne_rule)
+    rule_obj.set_table(entities.Person)
+    rule_obj.set_column(entities.Person.race_concept_id)
     assert (
         str(rule_obj.sql_clause)
-        == "race_concept_id != :race_concept_id_1 AND birth_datetime <= :birth_datetime_1"
+        == "person.race_concept_id != :race_concept_id_1 AND person.birth_datetime <= :birth_datetime_1"
     )
     ne_rule.update(time="|18:AGE:Y")
     rule_obj = query.RQuestQueryRule(**ne_rule)
+    rule_obj.set_table(entities.Person)
+    rule_obj.set_column(entities.Person.race_concept_id)
     assert (
         str(rule_obj.sql_clause)
-        == "race_concept_id != :race_concept_id_1 AND birth_datetime >= :birth_datetime_1"
+        == "person.race_concept_id != :race_concept_id_1 AND person.birth_datetime >= :birth_datetime_1"
     )
     ne_rule.update(time="|18|:AGE:Y")
     rule_obj = query.RQuestQueryRule(**ne_rule)
+    rule_obj.set_table(entities.Person)
+    rule_obj.set_column(entities.Person.race_concept_id)
     with pytest.raises(ValueError):
         print(rule_obj.sql_clause)
 
@@ -124,8 +136,10 @@ def test_group_sql_clause():
         "rules_oper": "OR",
     }
     group = query.RQuestQueryGroup(**and_rule)
+    group.rules[0].set_table(entities.Person)
+    group.rules[0].set_column(entities.Person.race_concept_id)
     # Assert single rule in group builds correctly
-    assert str(group.sql_clause) == "race_concept_id = :race_concept_id_1"
+    assert str(group.sql_clause) == "person.race_concept_id = :race_concept_id_1"
     and_rule["rules"].append(
         {
             "varname": "OMOP",
@@ -135,10 +149,14 @@ def test_group_sql_clause():
         },
     )
     group = query.RQuestQueryGroup(**and_rule)
+    group.rules[0].set_table(entities.Person)
+    group.rules[0].set_column(entities.Person.race_concept_id)
+    group.rules[1].set_table(entities.Person)
+    group.rules[1].set_column(entities.Person.gender_concept_id)
     # Assert multiple rules in group build correctly
     assert (
         str(group.sql_clause)
-        == "gender_concept_id = :gender_concept_id_1 OR race_concept_id = :race_concept_id_1"
+        == "person.race_concept_id = :race_concept_id_1 OR person.gender_concept_id = :gender_concept_id_1"
     )
 
 
@@ -160,8 +178,10 @@ def test_cohort_sql_clause():
         "groups_oper": "AND",
     }
     cohort = query.RQuestQueryCohort(**and_group)
+    cohort.groups[0].rules[0].set_table(entities.Person)
+    cohort.groups[0].rules[0].set_column(entities.Person.race_concept_id)
     # Assert single rule in single group builds correctly
-    assert str(cohort.sql_clause) == "race_concept_id = :race_concept_id_1"
+    assert str(cohort.sql_clause) == "person.race_concept_id = :race_concept_id_1"
     and_group["groups"][0]["rules"].append(
         {
             "varname": "OMOP",
@@ -171,10 +191,14 @@ def test_cohort_sql_clause():
         }
     )
     cohort = query.RQuestQueryCohort(**and_group)
+    cohort.groups[0].rules[0].set_table(entities.Person)
+    cohort.groups[0].rules[0].set_column(entities.Person.race_concept_id)
+    cohort.groups[0].rules[1].set_table(entities.Person)
+    cohort.groups[0].rules[1].set_column(entities.Person.gender_concept_id)
     # Assert multiple rules in single group build correctly
     assert (
         str(cohort.sql_clause)
-        == "gender_concept_id = :gender_concept_id_1 OR race_concept_id = :race_concept_id_1"
+        == "person.race_concept_id = :race_concept_id_1 OR person.gender_concept_id = :gender_concept_id_1"
     )
     and_group["groups"].append(
         {
@@ -191,9 +215,15 @@ def test_cohort_sql_clause():
     )
     # Assert multiple rules in multiple groups build correctly
     cohort = query.RQuestQueryCohort(**and_group)
+    cohort.groups[0].rules[0].set_table(entities.Person)
+    cohort.groups[0].rules[0].set_column(entities.Person.race_concept_id)
+    cohort.groups[0].rules[1].set_table(entities.Person)
+    cohort.groups[0].rules[1].set_column(entities.Person.gender_concept_id)
+    cohort.groups[1].rules[0].set_table(entities.Person)
+    cohort.groups[1].rules[0].set_column(entities.Person.gender_concept_id)
     assert (
         str(cohort.sql_clause)
-        == "(gender_concept_id = :gender_concept_id_1 OR race_concept_id = :race_concept_id_1) AND gender_concept_id = :gender_concept_id_2"
+        == "(person.race_concept_id = :race_concept_id_1 OR person.gender_concept_id = :gender_concept_id_1) AND person.gender_concept_id = :gender_concept_id_2"
     )
 
 

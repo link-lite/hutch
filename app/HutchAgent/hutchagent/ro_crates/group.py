@@ -8,7 +8,7 @@ from hutchagent.ro_crates.thing import Thing
 
 
 class Group(Thing):
-    """Python representation of an group based on [ItemList](https://schema.org/ItemList)."""
+    """Python representation of a group based on [ItemList](https://schema.org/ItemList)."""
 
     def __init__(
         self,
@@ -16,13 +16,13 @@ class Group(Thing):
         type_: str,
         name: str,
         number_of_items: int,
-        item_list_element: List[Rule],
+        rules: List[Rule],
         rule_operator: Operator,
         **kwargs
     ) -> None:
         super().__init__(context, type_, name)
         self.number_of_items = number_of_items
-        self.item_list_element = item_list_element
+        self.rules = rules
         self.rule_operator = rule_operator
 
     def to_dict(self) -> dict:
@@ -33,7 +33,7 @@ class Group(Thing):
         """
         item_list_element = [self.rule_operator.to_dict()]
         item_list_element.extend(
-            [element.to_dict() for element in self.item_list_element]
+            [element.to_dict() for element in self.rules]
         )
         return {
             "@context": self.context,
@@ -41,7 +41,7 @@ class Group(Thing):
             "name": self.name,
             "numberOfItems": self.number_of_items,
             "itemListElement": [self.rule_operator.to_dict()]
-            + [element.to_dict() for element in self.item_list_element],
+            + [element.to_dict() for element in self.rules],
         }
 
     @classmethod
@@ -55,27 +55,27 @@ class Group(Thing):
             Self: `Group` object.
         """
 
-        item_list_element = []
+        rules = []
         operator = None
         for i in dict_.get("itemListElement", []):
             if i.get("name") == "ruleOperator":
                 operator = Operator.from_dict(i)
             else:
-                item_list_element.append(Rule.from_dict(i))
+                rules.append(Rule.from_dict(i))
         return cls(
             context=dict_.get("@context"),
             type_=dict_.get("@type"),
             name=dict_.get("name"),
             number_of_items=dict_.get("numberOfItems"),
-            item_list_element=item_list_element,
+            rules=rules,
             rule_operator=operator,
         )
 
     @property
     def sql_clause(self):
         if self.rule_operator.value == "AND":
-            return and_(*[rule.sql_clause for rule in self.item_list_element])
-        return or_(*[rule.sql_clause for rule in self.item_list_element])
+            return and_(*[rule.sql_clause for rule in self.rules])
+        return or_(*[rule.sql_clause for rule in self.rules])
 
     def __str__(self) -> str:
         """`Group` as a JSON string.
