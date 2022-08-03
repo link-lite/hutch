@@ -3,21 +3,21 @@ import { useBackendApi } from "contexts/BackendApi";
 import useSWR from "swr";
 
 export const fetchKeys = {
-  resultsModifierList: "ResultsModifier",
-  modifierTypeList: "ResultsModifier/Types",
+  resultsModifierList: "ResultsModifiers",
+  modifierTypeList: "ResultsModifiers/Types",
 };
 
 export const getResultsModifierApi = ({ api }) => ({
   create: ({ values }) =>
-    api.post("ResultsModifier", {
+    api.post("ResultsModifiers", {
       json: values,
     }),
   update: ({ values, id }) =>
-    api.put(`ResultsModifier/${id}`, {
+    api.put(`ResultsModifiers/${id}`, {
       json: values,
     }),
   delete: ({ values, id }) =>
-    api.delete(`ResultsModifier/${id}`, {
+    api.delete(`ResultsModifiers/${id}`, {
       json: values,
     }),
 });

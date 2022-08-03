@@ -3,8 +3,8 @@ import { useBackendApi } from "contexts/BackendApi";
 import useSWR from "swr";
 
 export const fetchKeys = {
-  activitySourceList: "ActivitySource",
-  activitySource: (id) => `ActivitySource/${id}`,
+  activitySourceList: "ActivitySources",
+  activitySource: (id) => `ActivitySources/${id}`,
 };
 
 export const getActivitySourceApi = ({ api }) => ({
@@ -13,15 +13,15 @@ export const getActivitySourceApi = ({ api }) => ({
    * @param {*} body
    */
   create: ({ values }) =>
-    api.post("ActivitySource", {
+    api.post("ActivitySources", {
       json: values,
     }),
   update: ({ values, id }) =>
-    api.put(`ActivitySource/${id}`, {
+    api.put(`ActivitySources/${id}`, {
       json: values,
     }),
   delete: ({ values, id }) =>
-    api.delete(`ActivitySource/${id}`, {
+    api.delete(`ActivitySources/${id}`, {
       json: values,
     }),
 });

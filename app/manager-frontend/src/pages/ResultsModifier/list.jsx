@@ -7,7 +7,7 @@ import {
   Input,
 } from "@chakra-ui/react";
 
-import { useResultsModifierList } from "api/resultsmodifier";
+import { useResultsModifierList } from "api/resultsmodifiers";
 import { useState } from "react";
 import { useBackendApi } from "contexts/BackendApi";
 import { DeleteModal } from "components/DeleteModal";

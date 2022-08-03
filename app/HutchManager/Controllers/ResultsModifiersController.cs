@@ -8,30 +8,36 @@ namespace HutchManager.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ResultsModifierController : ControllerBase
+public class ResultsModifiersController : ControllerBase
 {
   private readonly ResultsModifierService _resultsModifier;
-  public ResultsModifierController(ResultsModifierService resultsModifier)
+  public ResultsModifiersController(ResultsModifierService resultsModifier)
   {
     _resultsModifier = resultsModifier;
   }
-
-  [HttpGet]
-  public async Task<List<Models.ResultsModifierModel>> List()
-    => await _resultsModifier.List();
-
+  
+  /// <summary>
+  /// Create a new ResultsModifier
+  /// </summary>
+  /// <param name="resultsModifier"></param>
+  /// <returns></returns>
   [HttpPost]
   public async Task<ResultsModifierModel> Create(CreateResultsModifier resultsModifier)
     => await _resultsModifier.Create(resultsModifier);
-
-  [HttpGet("{id}")]
-  public async Task<ActionResult<ResultsModifierModel>> Get(int id)
-    => await _resultsModifier.Get(id);
-
-  [HttpGet("Types")]
+  
+  /// <summary>
+  /// Get a list of all Types
+  /// </summary>
+  /// <returns></returns>
+  [HttpGet("types")]
   public async Task<List<ModifierTypeModel>> GetTypes()
     => await _resultsModifier.GetTypes();
-
+  
+  /// <summary>
+  /// Delete a ResultsModiefier by ID
+  /// </summary>
+  /// <param name="id"></param>
+  /// <returns></returns>
   [HttpDelete("{id}")]
   public async Task<IActionResult> Delete(int id)
   {
@@ -45,7 +51,13 @@ public class ResultsModifierController : ControllerBase
     }
     return NoContent();
   }
-
+  
+  /// <summary>
+  /// Modify a ResultsModifier by ID
+  /// </summary>
+  /// <param name="id"></param>
+  /// <param name="resultsModifier"></param>
+  /// <returns></returns>
   [HttpPut("{id}")]
   public async Task<IActionResult> Set(int id, [FromBody] CreateResultsModifier resultsModifier)
   {
